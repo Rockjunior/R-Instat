@@ -153,18 +153,38 @@ Public Class sdgDoyRange
     Public Sub InitialiseControls()
         ucrNudToDiff.SetMinMax(1, 366)
         ucrNudToDiff.SetLinkedDisplayControl(lblToPlus)
+        ucrNudDateTo.SetMinMax(1, 366)
+        ucrNudDateTo.SetLinkedDisplayControl(lblDatePlusTo)
 
+        'Date
+        'From Day
         ucrPnlFrom.AddRadioButton(rdoFromFixed)
         ucrPnlFrom.AddRadioButton(rdoFromVariable)
         ucrPnlFrom.AddToLinkedControls(ucrDoyFrom, {rdoFromFixed}, bNewLinkedHideIfParameterMissing:=True)
         ucrPnlFrom.AddToLinkedControls(ucrReceiverFrom, {rdoFromVariable}, bNewLinkedHideIfParameterMissing:=True)
 
+        'To Day
         ucrPnlTo.AddRadioButton(rdoToFixed)
         ucrPnlTo.AddRadioButton(rdoToVariable)
         ucrPnlTo.AddRadioButton(rdoLength)
         ucrPnlTo.AddToLinkedControls(ucrDoyTo, {rdoToFixed}, bNewLinkedHideIfParameterMissing:=True)
         ucrPnlTo.AddToLinkedControls(ucrReceiverTo, {rdoToVariable}, bNewLinkedHideIfParameterMissing:=True)
         ucrPnlTo.AddToLinkedControls(ucrNudToDiff, {rdoLength}, bNewLinkedHideIfParameterMissing:=True)
+
+        'Date
+        'From Date
+        ucrPnlDateFrom.AddRadioButton(rdoFixedDateFrom)
+        ucrPnlDateFrom.AddRadioButton(rdoVarDateFrom)
+        ucrPnlDateFrom.AddToLinkedControls(ucrFixedDateFrom, {rdoFixedDateFrom}, bNewLinkedHideIfParameterMissing:=True)
+        ucrPnlDateFrom.AddToLinkedControls(ucrRecieverVarDate, {rdoVarDateFrom}, bNewLinkedHideIfParameterMissing:=True)
+
+        'To Date
+        ucrPnlDateTo.AddRadioButton(rdoFixedDateTo)
+        ucrPnlDateTo.AddRadioButton(rdoVarDateTo)
+        ucrPnlDateTo.AddRadioButton(rdoDateLenghtTo)
+        ucrPnlDateTo.AddToLinkedControls(ucrReceiverFixedDateTo, {rdoFixedDateTo}, bNewLinkedHideIfParameterMissing:=True)
+        ucrPnlDateTo.AddToLinkedControls(ucrReceiverVarDateTo, {rdoVarDateTo}, bNewLinkedHideIfParameterMissing:=True)
+        ucrPnlDateTo.AddToLinkedControls(ucrNudDateTo, {rdoDateLenghtTo}, bNewLinkedHideIfParameterMissing:=True)
 
         ucrReceiverFrom.Selector = ucrSelectorDoy
         'Strict because we only want numeric/integer, not Dates etc.
@@ -178,10 +198,45 @@ Public Class sdgDoyRange
         ucrDoyFrom.SetParameterIsNumber()
         ucrDoyTo.SetParameterIsNumber()
 
+        'Setting Datatype for the date receivers
+        'From Date Group{Panel}
+        ucrRecieverVarDate.Selector = ucrSelectorDoy
+        ucrRecieverVarDate.SetClimaticType("date")
+        ucrRecieverVarDate.strSelectorHeading = "Dates"
+
+        'To Date Group{Panel}
+        ucrReceiverVarDateTo.Selector = ucrSelectorDoy
+        ucrReceiverVarDateTo.SetClimaticType("date")
+        ucrReceiverVarDateTo.strSelectorHeading = "Dates"
+
         bControlsInitialised = True
         ucrSelectorDoy.Reset()
     End Sub
 
+    'Makes the selector visible when the grouped date radio buttons are checked
+    Private Sub DateSetSelectorVisible()
+        ucrSelectorDoy.Visible = (rdoVarDateFrom.Checked OrElse rdoVarDateTo.Checked)
+    End Sub
+
+    ' Makes the selector visible when the grouped date radio buttonin "(From) in Date group" is checked
+    Private Sub FromDate_CheckedChanged(sender As Object, e As EventArgs) Handles rdoFixedDateFrom.CheckedChanged, rdoVarDateFrom.CheckedChanged
+        If rdoVarDateFrom.Checked Then
+            ucrRecieverVarDate.SetMeAsReceiver()
+        End If
+        DateSetSelectorVisible()
+    End Sub
+
+    ' Makes the selector visible when the grouped date radio button in "(To) in Date group" is checked,
+    Private Sub ToDate_CheckedChanged(sender As Object, e As EventArgs) Handles rdoFixedDateTo.CheckedChanged, rdoVarDateTo.CheckedChanged, rdoDateLenghtTo.CheckedChanged
+        UpdateToValues()
+        If rdoVarDateTo.Checked Then
+            ucrReceiverVarDateTo.SetMeAsReceiver()
+        End If
+        lblToDate.Visible = rdoDateLenghtTo.Checked
+        DateSetSelectorVisible()
+    End Sub
+
+    ' Makes the selector visible when the grouped date radio button in "(To) in Day group" is checked
     Private Sub Fromrdo_CheckedChanged(sender As Object, e As EventArgs) Handles rdoFromFixed.CheckedChanged, rdoFromVariable.CheckedChanged
         UpdateFromValues()
         If rdoFromVariable.Checked Then
@@ -190,6 +245,7 @@ Public Class sdgDoyRange
         SetSelectorVisible()
     End Sub
 
+    'Makes the selector visible when the grouped Day radio buttons are checked
     Private Sub SetSelectorVisible()
         ucrSelectorDoy.Visible = (rdoFromVariable.Checked OrElse rdoToVariable.Checked)
     End Sub
@@ -205,6 +261,18 @@ Public Class sdgDoyRange
         End If
     End Sub
 
+    'Private Sub UpdateFromValues()
+    '    If bUpdate Then
+    '        If rdoFromFixed.Checked Then
+    '            clsDayFromOperator.AddParameter("from", strParameterValue:=ucrDoyFrom.GetValue(), iPosition:=1)
+    '        ElseIf rdoFromVariable.Checked Then
+    '            clsDayFromOperator.AddParameter("from", strParameterValue:=ucrReceiverFrom.GetVariableNames(False), iPosition:=1)
+    '        End If
+    '        UpdateCalculatedFrom()
+    '    End If
+    'End Sub
+
+    ' Makes the selector visible when the grouped Day radio button in "(To) in Day group" is checked
     Private Sub Tordo_CheckedChanged(sender As Object, e As EventArgs) Handles rdoToFixed.CheckedChanged, rdoToVariable.CheckedChanged, rdoLength.CheckedChanged
         UpdateToValues()
         If rdoToVariable.Checked Then
